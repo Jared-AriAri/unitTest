@@ -1,5 +1,7 @@
 const express = require("express");
 const sqlite3 = require("sqlite3").verbose();
+const fs = require("fs");
+const path = require("path");
 
 const authRoutes = require("./routes/auth");
 const usersRoutes = require("./routes/users");
@@ -15,7 +17,13 @@ const app = express();
 
 app.use(express.json());
 
-const db = new sqlite3.Database("./data/database.db");
+const dbPath = process.env.DB_PATH || path.join(__dirname, "data", "database.db");
+
+if (dbPath !== ":memory:") {
+  fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+}
+
+const db = new sqlite3.Database(dbPath);
 
 db.serialize(() => {
   db.run(`
