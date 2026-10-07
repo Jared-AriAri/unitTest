@@ -12,6 +12,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      DB_PATH: ":memory:"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,6 +33,7 @@ jobs:
 
   docker:
     needs: test
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
@@ -54,3 +58,26 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/unittest-api:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/unittest-api:${{ github.sha }}
+
+  deploy:
+    needs: docker
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Desplegar en EC2
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/unittest-api:latest
+            sudo docker stop unittest-api || true
+            sudo docker rm unittest-api || true
+            sudo docker run -d \
+              --name unittest-api \
+              --restart unless-stopped \
+              -p 80:80 \
+              ${{ secrets.DOCKERHUB_USERNAME }}/unittest-api:latest
+            sudo docker image prune -f
