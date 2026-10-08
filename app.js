@@ -141,7 +141,7 @@ app.locals.db = db;
 app.get("/health", (req, res) => {
   res.status(200).json({
     status: "ok",
-    message: "API funcionando correctamente"
+    message: "API actualizada mediante CI/CD"
   });
 });
 
