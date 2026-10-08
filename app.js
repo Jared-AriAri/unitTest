@@ -141,7 +141,7 @@ app.locals.db = db;
 app.get("/health", (req, res) => {
   res.status(200).json({
     status: "ok ret",
-    message: "API funcionando correctamente "
+    message: "API funcionando correctamente"
   });
 });
 
